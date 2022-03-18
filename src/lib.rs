@@ -11,12 +11,14 @@
 
 use std::ops::{Deref, DerefMut};
 
-use axum::body::{Bytes, Full, HttpBody};
-use axum::extract::rejection::HeadersAlreadyExtracted;
-use axum::extract::{FromRequest, RequestParts};
-use axum::http::{header, HeaderValue, StatusCode};
-use axum::response::{IntoResponse, Response};
-use axum::{async_trait, body, BoxError};
+use async_trait::async_trait;
+use axum_core::extract::rejection::HeadersAlreadyExtracted;
+use axum_core::extract::{FromRequest, RequestParts};
+use axum_core::response::{IntoResponse, Response};
+use axum_core::{body, BoxError};
+use bytes::Bytes;
+use http::{header, HeaderValue, StatusCode};
+use http_body::{Body as HttpBody, Full};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 

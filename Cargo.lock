@@ -67,8 +67,12 @@ dependencies = [
 name = "axum-xml"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
+ "axum-core",
+ "bytes",
  "http",
+ "http-body",
  "mime",
  "quick-xml",
  "reqwest",

@@ -20,15 +20,19 @@ exclude = [
 encoding = ["quick-xml/encoding"]
 
 [dependencies]
-axum = "0.4"
+async-trait = "0.1"
+axum-core = "0.1"
+http-body = "0.4"
 http = "0.2"
 mime = "0.3"
 quick-xml = { version = "0.22", features = ["serialize"] }
 serde = "1.0"
 thiserror = "1.0"
 tokio = { version = "1.17", features = ["rt", "macros"] }
+bytes = "1.1"
 
 [dev-dependencies]
+axum = "0.4"
 reqwest = "0.11"
 serde = { version = "1.0", features = ["derive"] }
 tower = "0.4"
