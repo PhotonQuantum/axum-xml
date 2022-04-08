@@ -1,5 +1,5 @@
 use axum_core::body;
-use axum_core::extract::rejection::{BytesRejection, HeadersAlreadyExtracted};
+use axum_core::extract::rejection::BytesRejection;
 use axum_core::response::Response;
 use http::StatusCode;
 use http_body::Full;
@@ -15,8 +15,6 @@ pub enum XmlRejection {
     MissingXMLContentType,
     #[error("{0}")]
     BytesRejection(#[from] BytesRejection),
-    #[error("{0}")]
-    HeadersAlreadyExtracted(#[from] HeadersAlreadyExtracted),
 }
 
 impl IntoResponse for XmlRejection {
@@ -33,7 +31,6 @@ impl IntoResponse for XmlRejection {
                 res
             }
             XmlRejection::BytesRejection(e) => e.into_response(),
-            XmlRejection::HeadersAlreadyExtracted(e) => e.into_response(),
         }
     }
 }

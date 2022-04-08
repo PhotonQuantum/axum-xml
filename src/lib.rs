@@ -12,13 +12,12 @@
 use std::ops::{Deref, DerefMut};
 
 use async_trait::async_trait;
-use axum_core::extract::rejection::HeadersAlreadyExtracted;
 use axum_core::extract::{FromRequest, RequestParts};
 use axum_core::response::{IntoResponse, Response};
-use axum_core::{body, BoxError};
+use axum_core::BoxError;
 use bytes::Bytes;
 use http::{header, HeaderValue, StatusCode};
-use http_body::{Body as HttpBody, Full};
+use http_body::Body as HttpBody;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -112,7 +111,7 @@ where
     type Rejection = XmlRejection;
 
     async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        if xml_content_type(req)? {
+        if xml_content_type(req) {
             let bytes = Bytes::from_request(req).await?;
 
             let value = quick_xml::de::from_reader(&*bytes)?;
@@ -124,33 +123,29 @@ where
     }
 }
 
-fn xml_content_type<B>(req: &RequestParts<B>) -> Result<bool, HeadersAlreadyExtracted> {
-    let content_type = if let Some(content_type) = req
-        .headers()
-        .ok_or_else(HeadersAlreadyExtracted::default)?
-        .get(header::CONTENT_TYPE)
-    {
+fn xml_content_type<B>(req: &RequestParts<B>) -> bool {
+    let content_type = if let Some(content_type) = req.headers().get(header::CONTENT_TYPE) {
         content_type
     } else {
-        return Ok(false);
+        return false;
     };
 
     let content_type = if let Ok(content_type) = content_type.to_str() {
         content_type
     } else {
-        return Ok(false);
+        return false;
     };
 
     let mime = if let Ok(mime) = content_type.parse::<mime::Mime>() {
         mime
     } else {
-        return Ok(false);
+        return false;
     };
 
     let is_xml_content_type = (mime.type_() == "application" || mime.type_() == "text")
         && (mime.subtype() == "xml" || mime.suffix().map_or(false, |name| name == "xml"));
 
-    Ok(is_xml_content_type)
+    is_xml_content_type
 }
 
 impl<T> Deref for Xml<T> {
@@ -179,22 +174,24 @@ where
 {
     fn into_response(self) -> Response {
         let mut bytes = Vec::new();
-        if let Err(err) = quick_xml::se::to_writer(&mut bytes, &self.0) {
-            return Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .header(
+        match quick_xml::se::to_writer(&mut bytes, &self.0) {
+            Ok(_) => (
+                [(
+                    header::CONTENT_TYPE,
+                    HeaderValue::from_static("application/xml"),
+                )],
+                bytes,
+            )
+                .into_response(),
+            Err(err) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                [(
                     header::CONTENT_TYPE,
                     HeaderValue::from_static(mime::TEXT_PLAIN_UTF_8.as_ref()),
-                )
-                .body(body::boxed(Full::from(err.to_string())))
-                .unwrap();
+                )],
+                err.to_string(),
+            )
+                .into_response(),
         }
-
-        let mut res = Response::new(body::boxed(Full::from(bytes)));
-        res.headers_mut().insert(
-            header::CONTENT_TYPE,
-            HeaderValue::from_static("application/xml"),
-        );
-        res
     }
 }
