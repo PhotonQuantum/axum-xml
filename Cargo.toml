@@ -34,7 +34,7 @@ thiserror = "1.0"
 axum = "0.5"
 reqwest = "0.11"
 serde = { version = "1.0", features = ["derive"] }
-tokio = { version = "1.18", features = ["rt", "macros"] }
+tokio = { version = "1.19", features = ["rt", "macros"] }
 tower = "0.4"
 tower-service = "0.3"
 uuid = { version = "1.1", features = ["serde"] }
