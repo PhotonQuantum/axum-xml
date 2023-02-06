@@ -12,11 +12,11 @@
 use std::ops::{Deref, DerefMut};
 
 use async_trait::async_trait;
-use axum_core::extract::{FromRequest, RequestParts};
+use axum_core::extract::FromRequest;
 use axum_core::response::{IntoResponse, Response};
 use axum_core::BoxError;
 use bytes::Bytes;
-use http::{header, HeaderValue, StatusCode};
+use http::{header, HeaderValue, Request, StatusCode};
 use http_body::Body as HttpBody;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -101,18 +101,19 @@ mod tests;
 pub struct Xml<T>(pub T);
 
 #[async_trait]
-impl<T, B> FromRequest<B> for Xml<T>
+impl<T, S, B> FromRequest<S, B> for Xml<T>
 where
     T: DeserializeOwned,
-    B: HttpBody + Send,
+    S: Send + Sync,
+    B: HttpBody + Send + 'static,
     B::Data: Send,
     B::Error: Into<BoxError>,
 {
     type Rejection = XmlRejection;
 
-    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        if xml_content_type(req) {
-            let bytes = Bytes::from_request(req).await?;
+    async fn from_request(req: Request<B>, state: &S) -> Result<Self, Self::Rejection> {
+        if xml_content_type(&req) {
+            let bytes = Bytes::from_request(req, state).await?;
 
             let value = quick_xml::de::from_reader(&*bytes)?;
 
@@ -123,7 +124,7 @@ where
     }
 }
 
-fn xml_content_type<B>(req: &RequestParts<B>) -> bool {
+fn xml_content_type<B>(req: &Request<B>) -> bool {
     let content_type = if let Some(content_type) = req.headers().get(header::CONTENT_TYPE) {
         content_type
     } else {
