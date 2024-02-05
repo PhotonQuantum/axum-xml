@@ -37,4 +37,4 @@ serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.35", features = ["rt", "macros"] }
 tower = "0.4"
 tower-service = "0.3"
-uuid = { version = "1.6", features = ["serde"] }
+uuid = { version = "1.7", features = ["serde"] }
