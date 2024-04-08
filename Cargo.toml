@@ -23,7 +23,7 @@ encoding = ["quick-xml/encoding"]
 async-trait = "0.1"
 axum-core = "0.2"
 bytes = "1.6"
-http = "0.2"
+http = "1.1"
 http-body = "0.4"
 mime = "0.3"
 quick-xml = { version = "0.26", features = ["serialize"] }
